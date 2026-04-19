@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraMusic - Reproductor</title>
+    <style>
+        body { background-color: #000000; color: #ffffff; font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
+        header { background-color: #121212; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #05B30C; }
+        header h1 { margin: 0; color: #05B30C; font-size: 24px; cursor: pointer;}
+
+        /* Menú Desplegable del Usuario (Actualizado para clic) */
+        .dropdown { position: relative; display: inline-block; }
+        .user-menu { font-size: 15px; color: #ffffff; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .dropdown-content { display: none; position: absolute; right: 0; background-color: #181818; min-width: 150px; box-shadow: 0px 8px 16px rgba(0,0,0,0.5); z-index: 3000; border-radius: 5px; border: 1px solid #333; overflow: hidden; margin-top: 10px;}
+        .dropdown-content a { color: white; padding: 12px 16px; text-decoration: none; display: block; font-size: 14px; }
+        .dropdown-content a:hover { background-color: #282828; color: #05B30C; }
+
+        /* Esta nueva clase es la que controla que se quede abierto */
+        .show { display: block; }
+
+        .logout-text { color: #ff4c4c !important; }
+
+        .content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
+
+        .header-seccion { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #282828; padding-bottom: 10px; margin-bottom: 20px; }
+        .header-seccion h2 { margin: 0; }
+        .btn-eliminar-playlist { background: #ff4c4c; color: white; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; display: none; transition: 0.2s;}
+        .btn-eliminar-playlist:hover { background: #d43f3f; transform: scale(1.05); }
+
+        .song-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
+        .song-card { background-color: #181818; padding: 15px; border-radius: 8px; text-align: center; cursor: pointer; transition: transform 0.2s; position: relative; }
+        .song-card:hover { transform: scale(1.05); background-color: #282828; }
+        .song-card img { width: 100%; border-radius: 5px; margin-bottom: 10px; aspect-ratio: 1 / 1; object-fit: cover; }
+        .song-title { font-weight: bold; margin-bottom: 5px; font-size: 15px; }
+        .song-artist { color: #a0a0a0; font-size: 13px; }
+
+        .card-actions { position: absolute; top: 20px; right: 20px; display: flex; gap: 8px; }
+        .icon-btn { background: rgba(0,0,0,0.7); color: white; border: none; font-size: 16px; cursor: pointer; border-radius: 50%; width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; transition: background 0.2s;}
+        .icon-btn:hover { background: #05B30C; color: black;}
+        .icon-btn.remove { background: rgba(255,76,76,0.7); }
+        .icon-btn.remove:hover { background: #ff4c4c; color: white; }
+
+        .player-bar { background-color: #121212; border-top: 1px solid #282828; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; position: fixed; bottom: 0; width: 100%; box-sizing: border-box; height: 90px; z-index: 2000; }
+        .now-playing { display: flex; align-items: center; width: 25%; }
+        .now-playing img { width: 50px; height: 50px; border-radius: 5px; margin-right: 15px; object-fit: cover;}
+        .controls-container { width: 50%; display: flex; flex-direction: column; align-items: center; }
+        .play-btn { background-color: #05B30C; color: black; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center; margin-bottom: 5px; transition: transform 0.1s;}
+        .play-btn:active { transform: scale(0.95); }
+        .progress-container { width: 100%; display: flex; align-items: center; gap: 10px; font-size: 12px; color: #a0a0a0;}
+        .progress-bar { -webkit-appearance: none; width: 100%; height: 5px; border-radius: 5px; background: #333; outline: none; cursor: pointer; }
+        .progress-bar::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #05B30C; cursor: pointer; }
+        .btn-letra { background-color: transparent; border: 1px solid #05B30C; color: #05B30C; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold;}
+        .btn-letra:hover { background-color: #05B30C; color: black; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); justify-content: center; align-items: center; z-index: 3000; }
+        .modal-content { background-color: #181818; padding: 30px; width: 90%; max-width: 500px; max-height: 70vh; display: flex; flex-direction: column; text-align: center; border-radius: 10px; border: 1px solid #333;}
+        .modal-letras { background-color: transparent; border: none;}
+        .close-btn { color: #ffffff; font-size: 30px; cursor: pointer; position: absolute; top: 20px; right: 40px; }
+
+        #lyricsContainer { flex: 1; overflow-y: auto; padding: 20px 0; scroll-behavior: smooth; }
+        .lyric-line { font-size: 24px; color: #555555; margin: 15px 0; transition: all 0.3s ease; font-weight: bold; }
+        .lyric-line.active { color: #05B30C; font-size: 32px; text-shadow: 0 0 10px rgba(5, 179, 12, 0.5); }
+        .input-playlist { width: 70%; padding: 10px; border-radius: 5px; border: 1px solid #333; background: #000; color: white; margin-bottom: 15px;}
+        .btn-crear { padding: 10px 15px; border-radius: 5px; background: #05B30C; border: none; color: white; font-weight: bold; cursor: pointer;}
+        .playlist-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #282828; margin-bottom: 8px; border-radius: 5px;}
+    </style>
+</head>
+<body>
+
+<header>
+    <h1 onclick="cargarTodas()">AuraMusic</h1>
+    <div class="dropdown">
+        <div class="user-menu" id="userNameDisplay" onclick="toggleMenu()">Hola, Cargando... ▼</div>
+
+        <div class="dropdown-content" id="miMenu">
+            <a href="#" onclick="cargarTodas()">Inicio</a>
+            <a href="#" onclick="cargarFavoritos()">Mis Favoritos</a>
+            <div id="menuPlaylistsContainer"></div>
+            <hr style="border-color: #333; margin: 0;">
+            <a href="login.html" class="logout-text">Cerrar Sesión</a>
+        </div>
+    </div>
+</header>
+
+<div class="content">
+    <div class="header-seccion">
+        <h2 id="tituloSeccion">Para ti</h2>
+        <button id="btnEliminarPlaylist" class="btn-eliminar-playlist" onclick="eliminarPlaylistActual()"> Eliminar Playlist</button>
+    </div>
+    <div class="song-list" id="songContainer"><p>Cargando música...</p></div>
+</div>
+
+<div class="player-bar">
+    <div class="now-playing">
+        <img id="currentCover" src="https://via.placeholder.com/50" alt="Portada">
+        <div>
+            <div class="song-title" id="currentTitle" style="font-size: 14px;">Selecciona canción</div>
+            <div class="song-artist" id="currentArtist" style="font-size: 12px;">-</div>
+        </div>
+    </div>
+    <div class="controls-container">
+        <button class="play-btn" id="playPauseBtn" onclick="togglePlayPause()">▶</button>
+        <div class="progress-container">
+            <span id="currentTimeDisplay">0:00</span>
+            <input type="range" id="progressBar" class="progress-bar" value="0" step="1" onchange="seekVideo()">
+            <span id="durationDisplay">0:00</span>
+        </div>
+    </div>
+    <button class="btn-letra" onclick="abrirLetra()">Ver Letra</button>
+</div>
+
+<div id="ytplayer" style="display: none;"></div>
+
+<div id="letraModal" class="modal">
+    <span class="close-btn" onclick="cerrarModal('letraModal')">&times;</span>
+    <div class="modal-content modal-letras">
+        <h2 id="tituloLetra" style="color: #ffffff; margin-bottom: 20px;">Título</h2>
+        <div id="lyricsContainer"></div>
+    </div>
+</div>
+
+<div id="playlistModal" class="modal">
+    <span class="close-btn" onclick="cerrarModal('playlistModal')">&times;</span>
+    <div class="modal-content">
+        <h2 style="color: #05B30C; margin-top: 0;">Añadir a Playlist</h2>
+        <div>
+            <input type="text" id="nuevaPlaylistNombre" class="input-playlist" placeholder="Nombre nueva playlist...">
+            <button class="btn-crear" onclick="crearPlaylist()">Crear</button>
+        </div>
+        <hr style="border-color: #333; margin: 20px 0;">
+        <div id="misPlaylistsContainer" style="max-height: 250px; overflow-y: auto;"></div>
+    </div>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+    let cancionActual = null;
+    let parsedLyrics = [];
+    let ytPlayer;
+    let isPlaying = false;
+    let updateInterval;
+    let cancionParaPlaylist = null;
+    let currentPlaylistId = null;
+
+    // --- NUEVO: FUNCIONES DEL MENÚ DESPLEGABLE CON CLIC ---
+    function toggleMenu() {
+        document.getElementById("miMenu").classList.toggle("show");
+    }
+
+    // Cierra el menú si el usuario hace clic fuera de él
+    window.onclick = function(event) {
+        if (!event.target.matches('.user-menu')) {
+            var dropdowns = document.getElementsByClassName("dropdown-content");
+            for (var i = 0; i < dropdowns.length; i++) {
+                var openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+        }
+    }
+    // --------------------------------------------------------
+
+    function onYouTubeIframeAPIReady() {
+        ytPlayer = new YT.Player('ytplayer', {
+            height: '0', width: '0', playerVars: { 'autoplay': 1, 'controls': 0 },
+            events: { 'onReady': () => console.log("YT Listo"), 'onStateChange': onPlayerStateChange }
+        });
+    }
+
+    function onPlayerStateChange(event) {
+        if (event.data == YT.PlayerState.PLAYING) {
+            document.getElementById('playPauseBtn').innerText = '⏸';
+            isPlaying = true; iniciarCronometro();
+        } else {
+            document.getElementById('playPauseBtn').innerText = '▶';
+            isPlaying = false; clearInterval(updateInterval);
+        }
+    }
+
+    window.onload = async function() {
+        const email = localStorage.getItem('userEmail');
+        if(email) {
+            try {
+                const res = await fetch(`http://localhost:8080/api/users/${email}`);
+                const user = await res.json();
+                document.getElementById('userNameDisplay').innerText = `Hola, ${user.nombre} ▼`;
+                actualizarMenuPlaylists();
+            } catch(e) { console.log(e); }
+        }
+        cargarTodas();
+    }
+
+    async function actualizarMenuPlaylists() {
+        const email = localStorage.getItem('userEmail');
+        if(!email) return;
+        try {
+            const res = await fetch(`http://localhost:8080/api/playlists/user/${email}`);
+            const playlists = await res.json();
+            const menuContainer = document.getElementById('menuPlaylistsContainer');
+            menuContainer.innerHTML = '';
+            playlists.forEach(p => {
+                // También quitamos el emoji de la nota musical aquí
+                menuContainer.innerHTML += `<a href="#" onclick="verPlaylist(${p.id}, '${p.nombre}')">${p.nombre}</a>`;
+            });
+        } catch (error) { console.error("Error al cargar menú de playlists", error); }
+    }
+
+    function verPlaylist(id, nombre) {
+        currentPlaylistId = id;
+        document.getElementById('tituloSeccion').innerText = "Playlist: " + nombre;
+        document.getElementById('btnEliminarPlaylist').style.display = 'block';
+        cargarCanciones(`http://localhost:8080/api/playlists/${id}/songs`);
+    }
+
+    async function cargarTodas() {
+        currentPlaylistId = null;
+        document.getElementById('tituloSeccion').innerText = "Para ti";
+        document.getElementById('btnEliminarPlaylist').style.display = 'none';
+        cargarCanciones('http://localhost:8080/api/songs');
+    }
+
+    async function cargarFavoritos() {
+        currentPlaylistId = null;
+        const email = localStorage.getItem('userEmail');
+        document.getElementById('tituloSeccion').innerText = "Mis Favoritos";
+        document.getElementById('btnEliminarPlaylist').style.display = 'none';
+        cargarCanciones(`http://localhost:8080/api/likes/user/${email}`);
+    }
+
+    async function cargarCanciones(url) {
+        try {
+            const response = await fetch(url);
+            const songs = await response.json();
+            const container = document.getElementById('songContainer');
+            container.innerHTML = '';
+
+            if(songs.length === 0) { container.innerHTML = '<p>No hay canciones aquí todavía.</p>'; return; }
+
+            songs.forEach(song => {
+                const portada = song.imagenUrl ? song.imagenUrl : 'https://via.placeholder.com/200x200/333333/05B30C?text=AuraMusic';
+                const card = document.createElement('div');
+                card.className = 'song-card';
+                card.onclick = () => reproducirCancion(song, portada);
+
+                let botonesHtml = `<button class="icon-btn" onclick="abrirModalPlaylist(event, ${song.id})" title="Añadir a Playlist">➕</button>`;
+
+                if (currentPlaylistId !== null) {
+                    botonesHtml += `<button class="icon-btn remove" onclick="quitarDePlaylist(event, ${song.id})" title="Quitar de esta Playlist">❌</button>`;
+                }
+
+                botonesHtml += `<button class="icon-btn" onclick="toggleLike(event, ${song.id})" title="Me Gusta">🤍</button>`;
+
+                card.innerHTML = `
+                        <div class="card-actions">
+                            ${botonesHtml}
+                        </div>
+                        <img src="${portada}" alt="${song.nombre}">
+                        <div class="song-title">${song.nombre}</div>
+                        <div class="song-artist">${song.artist.nombre}</div>
+                    `;
+                container.appendChild(card);
+            });
+        } catch (error) {
+            document.getElementById('songContainer').innerHTML = '<p>Error al cargar la música.</p>';
+        }
+    }
+
+    async function quitarDePlaylist(event, songId) {
+        event.stopPropagation();
+        if(!currentPlaylistId) return;
+        if(!confirm("¿Seguro que quieres quitar esta canción de la lista?")) return;
+
+        try {
+            const res = await fetch('http://localhost:8080/api/playlists/remove-song', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({playlistId: currentPlaylistId, songId: songId})
+            });
+            const msj = await res.text();
+            alert(msj);
+            cargarCanciones(`http://localhost:8080/api/playlists/${currentPlaylistId}/songs`);
+        } catch (error) { console.error("Error", error); }
+    }
+
+    async function eliminarPlaylistActual() {
+        if(!currentPlaylistId) return;
+        if(!confirm("¿Estás MUY SEGURO de querer eliminar toda esta playlist de forma permanente?")) return;
+
+        try {
+            const res = await fetch(`http://localhost:8080/api/playlists/${currentPlaylistId}`, { method: 'DELETE' });
+            const msj = await res.text();
+            alert(msj);
+            actualizarMenuPlaylists();
+            cargarTodas();
+        } catch (error) { console.error("Error", error); }
+    }
+
+    async function abrirModalPlaylist(event, songId) {
+        event.stopPropagation();
+        cancionParaPlaylist = songId;
+        document.getElementById('playlistModal').style.display = 'flex';
+        cargarMisPlaylists();
+    }
+
+    async function cargarMisPlaylists() {
+        const email = localStorage.getItem('userEmail');
+        const res = await fetch(`http://localhost:8080/api/playlists/user/${email}`);
+        const playlists = await res.json();
+        const lista = document.getElementById('misPlaylistsContainer');
+        lista.innerHTML = '';
+        playlists.forEach(p => {
+            // Iconos mantenidos solo en la ventana modal de añadir, no en el menú superior
+            lista.innerHTML += `<div class="playlist-item"><span>🎵 ${p.nombre}</span><button class="btn-crear" style="padding: 5px 10px;" onclick="agregarAPlaylist(${p.id})">Añadir</button></div>`;
+        });
+    }
+
+    async function crearPlaylist() {
+        const nombre = document.getElementById('nuevaPlaylistNombre').value;
+        const email = localStorage.getItem('userEmail');
+        if(!nombre) return;
+        await fetch('http://localhost:8080/api/playlists/create', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({email: email, nombre: nombre})
+        });
+        document.getElementById('nuevaPlaylistNombre').value = '';
+        cargarMisPlaylists();
+        actualizarMenuPlaylists();
+    }
+
+    async function agregarAPlaylist(playlistId) {
+        const res = await fetch('http://localhost:8080/api/playlists/add-song', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({playlistId: playlistId, songId: cancionParaPlaylist})
+        });
+        const msj = await res.text();
+        alert(msj);
+        cerrarModal('playlistModal');
+    }
+
+    async function reproducirCancion(song, portada) {
+        cancionActual = song;
+        document.getElementById('currentTitle').innerText = song.nombre;
+        document.getElementById('currentArtist').innerText = song.artist.nombre;
+        document.getElementById('currentCover').src = portada;
+
+        if(!song.audioUrl) return alert("Esta canción no tiene enlace de YouTube.");
+        const videoId = extraerIdYouTube(song.audioUrl);
+        if(videoId && ytPlayer && ytPlayer.loadVideoById) ytPlayer.loadVideoById(videoId);
+
+        const lyricsContainer = document.getElementById('lyricsContainer');
+        parsedLyrics = [];
+
+        if (song.letra && song.letra.trim() !== "") {
+            prepararLetras(song.letra);
+        } else {
+            lyricsContainer.innerHTML = '<div class="lyric-line active">Buscando letra sincronizada...</div>';
+            const letraDesdeAPI = await buscarLetraAPI(song.nombre, song.artist.nombre);
+            if (letraDesdeAPI) prepararLetras(letraDesdeAPI);
+            else lyricsContainer.innerHTML = '<div class="lyric-line active">No se encontró letra sincronizada.</div>';
+        }
+    }
+
+    async function buscarLetraAPI(titulo, artista) {
+        try {
+            const track = encodeURIComponent(titulo);
+            const artist = encodeURIComponent(artista);
+            const response = await fetch(`https://lrclib.net/api/search?track_name=${track}&artist_name=${artist}`);
+            const data = await response.json();
+            if (data && data.length > 0) {
+                const resultadoIdeal = data.find(cancion => cancion.syncedLyrics);
+                if (resultadoIdeal) return resultadoIdeal.syncedLyrics;
+            }
+            return null;
+        } catch (error) { return null; }
+    }
+
+    function extraerIdYouTube(url) {
+        const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/gi;
+        const match = regex.exec(url); return match ? match[1] : null;
+    }
+
+    function togglePlayPause() {
+        if(!ytPlayer || !cancionActual) return;
+        if(isPlaying) ytPlayer.pauseVideo(); else ytPlayer.playVideo();
+    }
+
+    function seekVideo() {
+        if(!ytPlayer) return;
+        const seekTo = document.getElementById('progressBar').value;
+        ytPlayer.seekTo(seekTo, true);
+    }
+
+    function iniciarCronometro() {
+        clearInterval(updateInterval);
+        updateInterval = setInterval(() => {
+            if(!ytPlayer || !ytPlayer.getCurrentTime) return;
+            const currentTime = ytPlayer.getCurrentTime();
+            const duration = ytPlayer.getDuration();
+            document.getElementById('progressBar').max = duration;
+            document.getElementById('progressBar').value = currentTime;
+            document.getElementById('currentTimeDisplay').innerText = formatoTiempo(currentTime);
+            document.getElementById('durationDisplay').innerText = formatoTiempo(duration);
+            sincronizarLetras(currentTime);
+        }, 500);
+    }
+
+    function formatoTiempo(segundosTotales) {
+        if(!segundosTotales) return "0:00";
+        const minutos = Math.floor(segundosTotales / 60);
+        const segundos = Math.floor(segundosTotales % 60);
+        return minutos + ":" + (segundos < 10 ? "0" : "") + segundos;
+    }
+
+    function prepararLetras(letraRaw) {
+        parsedLyrics = [];
+        const container = document.getElementById('lyricsContainer');
+        container.innerHTML = '';
+        if (!letraRaw) return;
+
+        const lineas = letraRaw.split('\n');
+        const regex = /\[(\d{2}):(\d{2}\.\d{2,3}|\d{2})\](.*)/;
+
+        lineas.forEach((linea, index) => {
+            const match = linea.match(regex);
+            if (match) {
+                const tiempoTotal = (parseInt(match[1]) * 60) + parseFloat(match[2]);
+                parsedLyrics.push({ time: tiempoTotal, text: match[3].trim(), id: 'line-' + index });
+                const p = document.createElement('div');
+                p.id = 'line-' + index; p.className = 'lyric-line'; p.innerText = match[3].trim() || '♪';
+                container.appendChild(p);
+            } else if (linea.trim() !== "") {
+                const p = document.createElement('div'); p.className = 'lyric-line'; p.innerText = linea;
+                container.appendChild(p);
+            }
+        });
+    }
+
+    function sincronizarLetras(tiempoActual) {
+        if (parsedLyrics.length === 0) return;
+        let lineaActivaIndex = -1;
+        for (let i = 0; i < parsedLyrics.length; i++) {
+            if (tiempoActual >= parsedLyrics[i].time) lineaActivaIndex = i; else break;
+        }
+        parsedLyrics.forEach((linea, index) => {
+            const el = document.getElementById(linea.id);
+            if (el) {
+                if (index === lineaActivaIndex) {
+                    if(!el.classList.contains('active')) {
+                        el.classList.add('active');
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                } else el.classList.remove('active');
+            }
+        });
+    }
+
+    function abrirLetra() {
+        if(!cancionActual) return;
+        document.getElementById('tituloLetra').innerText = cancionActual.nombre;
+        document.getElementById('letraModal').style.display = 'flex';
+    }
+
+    function cerrarModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    async function toggleLike(event, songId) {
+        event.stopPropagation();
+        const email = localStorage.getItem('userEmail');
+        if(!email) { alert("Inicia sesión para guardar favoritos."); return window.location.href = "login.html"; }
+        try {
+            const response = await fetch('http://localhost:8080/api/likes/toggle', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, songId: songId })
+            });
+            const mensaje = await response.text();
+            alert(mensaje);
+            if(mensaje.includes("Añadido")) event.target.innerText = "❤️";
+            else event.target.innerText = "🤍";
+        } catch (error) { console.error("Error al guardar favorito:", error); }
+    }
+</script>
+</body>
+</html>

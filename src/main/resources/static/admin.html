@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraMusic - Panel de Administrador</title>
+    <style>
+        body { background-color: #000000; color: #ffffff; font-family: Arial, sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .admin-container { background-color: #121212; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(5, 179, 12, 0.2); width: 100%; max-width: 600px; }
+        h1, h2 { color: #05B30C; text-align: center; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
+        label { margin-bottom: 5px; color: #a0a0a0; font-size: 14px; }
+        input, select { padding: 10px; border: 1px solid #333; border-radius: 5px; background-color: #000000; color: white; outline: none; }
+        input:focus, select:focus { border-color: #05B30C; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 25px; background-color: #05B30C; color: white; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        button:hover { background-color: #048c09; }
+        .logout { text-align: center; display: block; margin-top: 20px; color: #a0a0a0; text-decoration: none; }
+        .logout:hover { color: #ff4c4c; }
+    </style>
+</head>
+<body>
+
+<div class="admin-container">
+    <h1>AuraMusic Admin</h1>
+    <h2>Registrar Nueva Canción</h2>
+
+    <form id="songForm">
+        <div class="form-group">
+            <label for="nombre">Nombre de la canción:</label>
+            <input type="text" id="nombre" required>
+        </div>
+        <div class="form-group">
+            <label for="duracion">Duración (en segundos):</label>
+            <input type="number" id="duracion" placeholder="Ej: 215" required>
+        </div>
+        <div class="form-group">
+            <label for="album">Álbum:</label>
+            <input type="text" id="album">
+        </div>
+        <div class="form-group">
+            <label for="imagenUrl">URL de la Imagen (Portada):</label>
+            <input type="url" id="imagenUrl" placeholder="https://ejemplo.com/portada.jpg">
+        </div>
+        <div class="form-group">
+            <label for="audioUrl">URL del Audio o YouTube:</label>
+            <input type="url" id="audioUrl" placeholder="https://www.youtube.com/watch?v=...">
+        </div>
+        <div class="form-group">
+            <label for="fechaLanzamiento">Fecha de Lanzamiento:</label>
+            <input type="date" id="fechaLanzamiento">
+        </div>
+        <div class="form-group">
+            <label for="artistSelect">Artista:</label>
+            <select id="artistSelect" required><option value="">Cargando artistas...</option></select>
+        </div>
+        <div class="form-group">
+            <label for="genreSelect">Género:</label>
+            <select id="genreSelect" required><option value="">Cargando géneros...</option></select>
+        </div>
+
+        <button type="button" onclick="guardarCancion()">Guardar Canción</button>
+    </form>
+    <a href="login.html" class="logout">Cerrar Sesión</a>
+</div>
+
+<script>
+    window.onload = async function() {
+        try {
+            const resArtists = await fetch('http://localhost:8080/api/artists');
+            const artists = await resArtists.json();
+            const artistSelect = document.getElementById('artistSelect');
+            artistSelect.innerHTML = '<option value="">Selecciona un artista</option>';
+            artists.forEach(a => { artistSelect.innerHTML += `<option value="${a.id}">${a.nombre}</option>`; });
+
+            const resGenres = await fetch('http://localhost:8080/api/genres');
+            const genres = await resGenres.json();
+            const genreSelect = document.getElementById('genreSelect');
+            genreSelect.innerHTML = '<option value="">Selecciona un género</option>';
+            genres.forEach(g => { genreSelect.innerHTML += `<option value="${g.id}">${g.nombre}</option>`; });
+        } catch (error) {
+            alert("Error al cargar los datos. Asegúrate de que el servidor esté encendido.");
+        }
+    };
+
+    async function guardarCancion() {
+        const songData = {
+            nombre: document.getElementById('nombre').value,
+            duracion: document.getElementById('duracion').value,
+            album: document.getElementById('album').value,
+            imagenUrl: document.getElementById('imagenUrl').value,
+            audioUrl: document.getElementById('audioUrl').value,
+            fechaLanzamiento: document.getElementById('fechaLanzamiento').value,
+            artist: { id: document.getElementById('artistSelect').value },
+            genre: { id: document.getElementById('genreSelect').value }
+        };
+
+        if(!songData.nombre || !songData.duracion || !songData.artist.id || !songData.genre.id) {
+            return alert("Por favor, llena los campos obligatorios.");
+        }
+
+        try {
+            const response = await fetch('http://localhost:8080/api/songs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(songData)
+            });
+
+            if (response.ok) {
+                alert("¡Canción guardada con éxito en AuraMusic!");
+                document.getElementById('songForm').reset();
+            } else {
+                alert("Hubo un error al guardar la canción.");
+            }
+        } catch (error) {
+            alert("Error de conexión con el servidor.");
+        }
+    }
+</script>
+</body>
+</html>

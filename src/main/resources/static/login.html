@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraMusic - Iniciar Sesión</title>
+    <style>
+        body { background-color: #000000; color: #ffffff; font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-container { background-color: #121212; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(5, 179, 12, 0.2); width: 100%; max-width: 350px; text-align: center; }
+        h1 { color: #05B30C; margin-bottom: 30px; }
+        input { width: 90%; padding: 12px; margin-bottom: 20px; border: 1px solid #333; border-radius: 25px; background-color: #000000; color: white; outline: none; }
+        input:focus { border-color: #05B30C; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 25px; background-color: #05B30C; color: white; font-size: 16px; font-weight: bold; cursor: pointer; transition: background-color 0.3s; margin-bottom: 15px; }
+        button:hover { background-color: #048c09; }
+        p { font-size: 14px; color: #a0a0a0; }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <h1>AuraMusic</h1>
+    <form id="loginForm">
+        <input type="email" id="email" placeholder="Correo electrónico" required>
+        <input type="password" id="password" placeholder="Contraseña" required>
+        <button type="button" onclick="iniciarSesion()">Iniciar Sesión</button>
+    </form>
+
+    <hr style="border-color: #333; margin: 20px 0;">
+
+    <p>¿Eres nuevo? Regístrate solo con tu correo y te enviaremos una contraseña segura.</p>
+    <form id="registerForm">
+        <input type="text" id="regNombre" placeholder="Tu Nombre" required>
+        <input type="email" id="regEmail" placeholder="Tu Correo" required>
+        <button type="button" onclick="registrarUsuario()" style="background-color: transparent; border: 2px solid #05B30C; color: #05B30C;">Solicitar Contraseña</button>
+    </form>
+</div>
+
+<script>
+    async function iniciarSesion() {
+        const emailInput = document.getElementById('email').value;
+        const passwordInput = document.getElementById('password').value;
+
+        if(!emailInput || !passwordInput) return alert("Por favor, llena ambos campos.");
+
+        try {
+            const response = await fetch('http://localhost:8080/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: emailInput, password: passwordInput })
+            });
+
+            if (response.ok) {
+                const rol = await response.text();
+                localStorage.setItem('userEmail', emailInput); // ¡Súper importante para los Favoritos!
+
+                if(rol === "admin") window.location.href = "admin.html";
+                else window.location.href = "app.html";
+
+            } else {
+                alert("Error: Correo o contraseña incorrectos.");
+            }
+        } catch (error) {
+            alert("Error al conectar con el servidor.");
+        }
+    }
+
+    async function registrarUsuario() {
+        const nombreInput = document.getElementById('regNombre').value;
+        const emailInput = document.getElementById('regEmail').value;
+
+        if(!nombreInput || !emailInput) return alert("Llena tu nombre y correo para registrarte.");
+        alert("Procesando registro... Esto puede tardar unos segundos mientras enviamos el correo.");
+
+        try {
+            const response = await fetch('http://localhost:8080/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre: nombreInput, email: emailInput })
+            });
+            const mensaje = await response.text();
+            if (response.ok) {
+                alert("¡Éxito! " + mensaje + " Revisa tu bandeja de entrada o spam.");
+                document.getElementById('regNombre').value = '';
+                document.getElementById('regEmail').value = '';
+            } else {
+                alert("Error: " + mensaje);
+            }
+        } catch (error) {
+            alert("Error al conectar con el servidor.");
+        }
+    }
+</script>
+</body>
+</html>

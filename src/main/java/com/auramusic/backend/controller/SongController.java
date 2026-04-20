@@ -9,6 +9,8 @@ import com.auramusic.backend.model.Artist;
 import com.auramusic.backend.model.Genre;
 import com.auramusic.backend.repository.ArtistRepository;
 import com.auramusic.backend.repository.GenreRepository;
+import org.springframework.http.ResponseEntity;
+import java.util.List;
 
 import java.util.List;
 
@@ -80,6 +82,41 @@ public class SongController {
             System.err.println("!!! ERROR FATAL AL GUARDAR LA CANCION !!!");
             e.printStackTrace();
             return ResponseEntity.status(500).body("Error interno al guardar: " + e.getMessage());
+        }
+    }
+
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateSong(@PathVariable Integer id, @RequestBody Song songDetails) {
+        try {
+            Song existingSong = songRepository.findById(id).orElse(null);
+            if (existingSong == null) {
+                return ResponseEntity.notFound().build(); // Si no existe, lanza error 404
+            }
+
+            // Actualizamos los datos básicos
+            existingSong.setNombre(songDetails.getNombre());
+            existingSong.setDuracion(songDetails.getDuracion());
+            existingSong.setAlbum(songDetails.getAlbum());
+            existingSong.setImagenUrl(songDetails.getImagenUrl());
+            existingSong.setAudioUrl(songDetails.getAudioUrl());
+            existingSong.setFechaLanzamiento(songDetails.getFechaLanzamiento());
+
+            Song updatedSong = songRepository.save(existingSong);
+            return ResponseEntity.ok(updatedSong);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al actualizar la canción: " + e.getMessage());
+        }
+    }
+
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteSong(@PathVariable Integer id) {
+        try {
+            songRepository.deleteById(id);
+            return ResponseEntity.ok("Canción eliminada correctamente");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al eliminar la canción: " + e.getMessage());
         }
     }
 }

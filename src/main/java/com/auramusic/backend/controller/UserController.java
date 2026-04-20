@@ -15,4 +15,9 @@ public class UserController {
     public User getUserByEmail(@PathVariable String email) {
         return userRepository.findByEmail(email);
     }
+
+    @GetMapping
+    public ResponseEntity<List<User>> getAllUsers() {
+        return ResponseEntity.ok(userRepository.findAll());
+    }
 }

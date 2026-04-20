@@ -32,37 +32,54 @@ public class SongController {
         return songRepository.findAll(); // El repositorio busca todas las canciones y las devuelve
     }
 
-    // 2. Método para GUARDAR una nueva canción (Lo usará el Administrador)
     @PostMapping
-    public ResponseEntity<Song> createSong(@RequestBody Song song) {
-        // 1. Revisar y guardar el Artista
-        if (song.getArtist() != null && song.getArtist().getNombre() != null) {
-            Artist existingArtist = artistRepository.findByNombre(song.getArtist().getNombre());
-            if (existingArtist != null) {
-                song.setArtist(existingArtist); // Si ya existe, lo usa
-            } else {
-                Artist newArtist = new Artist();
-                newArtist.setNombre(song.getArtist().getNombre());
-                artistRepository.save(newArtist); // Si no existe, lo crea
-                song.setArtist(newArtist);
-            }
-        }
+    public ResponseEntity<?> createSong(@RequestBody Song song) {
+        try {
+            System.out.println("--- INTENTANDO GUARDAR CANCION ---");
+            System.out.println("Cancion: " + song.getNombre());
 
-        // 2. Revisar y guardar el Género
-        if (song.getGenre() != null && song.getGenre().getNombre() != null) {
-            Genre existingGenre = genreRepository.findByNombre(song.getGenre().getNombre());
-            if (existingGenre != null) {
-                song.setGenre(existingGenre); // Si ya existe, lo usa
-            } else {
-                Genre newGenre = new Genre();
-                newGenre.setNombre(song.getGenre().getNombre());
-                genreRepository.save(newGenre); // Si no existe, lo crea
-                song.setGenre(newGenre);
+            // 1. Revisar y guardar el Artista
+            if (song.getArtist() != null && song.getArtist().getNombre() != null) {
+                System.out.println("Buscando artista: " + song.getArtist().getNombre());
+                Artist existingArtist = artistRepository.findByNombre(song.getArtist().getNombre());
+                if (existingArtist != null) {
+                    System.out.println("Artista encontrado, asociando...");
+                    song.setArtist(existingArtist);
+                } else {
+                    System.out.println("Artista no encontrado, creando nuevo...");
+                    Artist newArtist = new Artist();
+                    newArtist.setNombre(song.getArtist().getNombre());
+                    artistRepository.save(newArtist);
+                    song.setArtist(newArtist);
+                }
             }
-        }
 
-        // 3. Guardar la canción final
-        Song savedSong = songRepository.save(song);
-        return ResponseEntity.ok(savedSong);
+            // 2. Revisar y guardar el Género
+            if (song.getGenre() != null && song.getGenre().getNombre() != null) {
+                System.out.println("Buscando genero: " + song.getGenre().getNombre());
+                Genre existingGenre = genreRepository.findByNombre(song.getGenre().getNombre());
+                if (existingGenre != null) {
+                    System.out.println("Genero encontrado, asociando...");
+                    song.setGenre(existingGenre);
+                } else {
+                    System.out.println("Genero no encontrado, creando nuevo...");
+                    Genre newGenre = new Genre();
+                    newGenre.setNombre(song.getGenre().getNombre());
+                    genreRepository.save(newGenre);
+                    song.setGenre(newGenre);
+                }
+            }
+
+            // 3. Guardar la canción final
+            System.out.println("Guardando cancion final...");
+            Song savedSong = songRepository.save(song);
+            System.out.println("¡CANCION GUARDADA CON EXITO!");
+            return ResponseEntity.ok(savedSong);
+
+        } catch (Exception e) {
+            System.err.println("!!! ERROR FATAL AL GUARDAR LA CANCION !!!");
+            e.printStackTrace(); // Esto imprimirá el error real en la consola de Render
+            return ResponseEntity.status(500).body("Error interno al guardar: " + e.getMessage());
+        }
     }
 }

@@ -3,68 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AuraMusic - Panel de Administrador</title>
+    <title>AuraMusic - Panel de Administrador Avanzado</title>
     <style>
-        body { background-color: #000000; color: #ffffff; font-family: Arial, sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .admin-container { background-color: #121212; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(5, 179, 12, 0.2); width: 100%; max-width: 600px; }
-        h1, h2 { color: #05B30C; text-align: center; }
+        body { background-color: #000000; color: #ffffff; font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .header { text-align: center; color: #05B30C; margin-bottom: 20px; }
+        .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { background-color: #333; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .tab-btn.active { background-color: #05B30C; }
+        .tab-content { display: none; background-color: #121212; padding: 30px; border-radius: 10px; max-width: 800px; margin: auto; box-shadow: 0 4px 15px rgba(5, 179, 12, 0.2); }
+        .tab-content.active { display: block; }
+
+        /* Formularios */
         .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
         label { margin-bottom: 5px; color: #a0a0a0; font-size: 14px; }
-        input { padding: 10px; border: 1px solid #333; border-radius: 5px; background-color: #000000; color: white; outline: none; }
+        input { padding: 10px; border: 1px solid #333; border-radius: 5px; background-color: #000; color: white; outline: none; }
         input:focus { border-color: #05B30C; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 25px; background-color: #05B30C; color: white; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; }
-        button:hover { background-color: #048c09; }
-        .logout { text-align: center; display: block; margin-top: 20px; color: #a0a0a0; text-decoration: none; }
+        .btn-submit { width: 100%; padding: 12px; border: none; border-radius: 25px; background-color: #05B30C; color: white; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .btn-submit:hover { background-color: #048c09; }
+
+        /* Tablas */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #333; padding: 10px; text-align: left; }
+        th { background-color: #05B30C; color: black; }
+        .action-btn { padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; font-weight: bold; margin-right: 5px; }
+        .btn-edit { background-color: #ffc107; color: black; }
+        .btn-delete { background-color: #dc3545; color: white; }
+
+        .logout { display: block; text-align: center; margin-top: 30px; color: #a0a0a0; text-decoration: none; }
         .logout:hover { color: #ff4c4c; }
     </style>
 </head>
 <body>
 
-<div class="admin-container">
+<div class="header">
     <h1>AuraMusic Admin</h1>
-    <h2>Registrar Nueva Canción</h2>
-
-    <form id="songForm">
-        <div class="form-group">
-            <label for="nombre">Nombre de la canción:</label>
-            <input type="text" id="nombre" required>
-        </div>
-        <div class="form-group">
-            <label for="duracion">Duración (en segundos):</label>
-            <input type="number" id="duracion" placeholder="Ej: 215" required>
-        </div>
-        <div class="form-group">
-            <label for="album">Álbum:</label>
-            <input type="text" id="album">
-        </div>
-        <div class="form-group">
-            <label for="imagenUrl">URL de la Imagen (Portada):</label>
-            <input type="url" id="imagenUrl" placeholder="https://ejemplo.com/portada.jpg">
-        </div>
-        <div class="form-group">
-            <label for="audioUrl">URL del Audio o YouTube:</label>
-            <input type="url" id="audioUrl" placeholder="https://www.youtube.com/watch?v=...">
-        </div>
-        <div class="form-group">
-            <label for="fechaLanzamiento">Fecha de Lanzamiento:</label>
-            <input type="date" id="fechaLanzamiento">
-        </div>
-
-        <div class="form-group">
-            <label for="artistInput">Artista:</label>
-            <input type="text" id="artistInput" placeholder="Escribe el nombre del artista" required>
-        </div>
-        <div class="form-group">
-            <label for="genreInput">Género:</label>
-            <input type="text" id="genreInput" placeholder="Ej: Pop, Rock, Reggaeton" required>
-        </div>
-
-        <button type="button" onclick="guardarCancion()">Guardar Canción</button>
-    </form>
-    <a href="login.html" class="logout">Cerrar Sesión</a>
 </div>
 
+<div class="tabs">
+    <button class="tab-btn active" onclick="showTab('registrarTab')">Registrar Canción</button>
+    <button class="tab-btn" onclick="showTab('gestionarTab'); cargarCanciones();">Gestionar Canciones</button>
+    <button class="tab-btn" onclick="showTab('usuariosTab'); cargarUsuarios();">Ver Usuarios</button>
+</div>
+
+<div id="registrarTab" class="tab-content active">
+    <h2 style="color: #05B30C; text-align: center;">Registrar Nueva Canción</h2>
+    <form id="songForm">
+        <div class="form-group"><label>Nombre de la canción:</label><input type="text" id="nombre" required></div>
+        <div class="form-group"><label>Duración (en segundos):</label><input type="number" id="duracion" required></div>
+        <div class="form-group"><label>Álbum:</label><input type="text" id="album"></div>
+        <div class="form-group"><label>URL de la Imagen:</label><input type="url" id="imagenUrl"></div>
+        <div class="form-group"><label>URL de YouTube:</label><input type="url" id="audioUrl"></div>
+        <div class="form-group"><label>Artista:</label><input type="text" id="artistInput" required></div>
+        <div class="form-group"><label>Género:</label><input type="text" id="genreInput" required></div>
+        <button type="button" class="btn-submit" onclick="guardarCancion()">Guardar Canción</button>
+    </form>
+</div>
+
+<div id="gestionarTab" class="tab-content">
+    <h2 style="color: #05B30C; text-align: center;">Canciones Registradas</h2>
+    <table>
+        <thead><tr><th>ID</th><th>Nombre</th><th>Artista</th><th>Acciones</th></tr></thead>
+        <tbody id="tablaCanciones"></tbody>
+    </table>
+</div>
+
+<div id="usuariosTab" class="tab-content">
+    <h2 style="color: #05B30C; text-align: center;">Usuarios Registrados</h2>
+    <table>
+        <thead><tr><th>ID</th><th>Nombre</th><th>Correo</th><th>Rol</th></tr></thead>
+        <tbody id="tablaUsuarios"></tbody>
+    </table>
+</div>
+
+<a href="login.html" class="logout">Cerrar Sesión</a>
+
 <script>
+    const API_URL = 'https://auramusic-6ae1.onrender.com/api';
+
+    // Función para cambiar entre pestañas
+    function showTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    // 1. Guardar Canción
     async function guardarCancion() {
         const songData = {
             nombre: document.getElementById('nombre').value,
@@ -72,32 +96,80 @@
             album: document.getElementById('album').value,
             imagenUrl: document.getElementById('imagenUrl').value,
             audioUrl: document.getElementById('audioUrl').value,
-            fechaLanzamiento: document.getElementById('fechaLanzamiento').value,
-            // Ahora mandamos el texto que escribiste al backend
             artist: { nombre: document.getElementById('artistInput').value },
             genre: { nombre: document.getElementById('genreInput').value }
         };
 
-        if(!songData.nombre || !songData.duracion || !songData.artist.nombre || !songData.genre.nombre) {
-            return alert("Por favor, llena los campos obligatorios.");
-        }
-
         try {
-            const response = await fetch('https://auramusic-6ae1.onrender.com/api/songs', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(songData)
+            const res = await fetch(`${API_URL}/songs`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(songData)
             });
+            if (res.ok) { alert("¡Canción guardada!"); document.getElementById('songForm').reset(); }
+            else { alert("Error al guardar."); }
+        } catch (error) { alert("Error de conexión."); }
+    }
 
-            if (response.ok) {
-                alert("¡Canción guardada con éxito en AuraMusic!");
-                document.getElementById('songForm').reset();
-            } else {
-                alert("Hubo un error al guardar. (Revisa si el backend soporta guardar por nombre).");
-            }
-        } catch (error) {
-            alert("Error de conexión con el servidor.");
+    // 2. Cargar Canciones
+    async function cargarCanciones() {
+        const tbody = document.getElementById('tablaCanciones');
+        tbody.innerHTML = "<tr><td colspan='4'>Cargando...</td></tr>";
+        try {
+            const res = await fetch(`${API_URL}/songs`);
+            const canciones = await res.json();
+            tbody.innerHTML = "";
+            canciones.forEach(c => {
+                const artistaNombre = c.artist ? c.artist.nombre : 'Desconocido';
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${c.id}</td><td>${c.nombre}</td><td>${artistaNombre}</td>
+                        <td>
+                            <button class="action-btn btn-edit" onclick="editarCancion(${c.id}, '${c.nombre}')">Editar</button>
+                            <button class="action-btn btn-delete" onclick="eliminarCancion(${c.id})">Borrar</button>
+                        </td>
+                    </tr>`;
+            });
+        } catch (error) { tbody.innerHTML = "<tr><td colspan='4'>Error al cargar</td></tr>"; }
+    }
+
+    // 3. Eliminar Canción
+    async function eliminarCancion(id) {
+        if(confirm("¿Estás seguro de que quieres borrar esta canción?")) {
+            try {
+                const res = await fetch(`${API_URL}/songs/${id}`, { method: 'DELETE' });
+                if (res.ok) { alert("Canción borrada"); cargarCanciones(); }
+                else alert("Error al borrar.");
+            } catch (error) { alert("Error de conexión."); }
         }
+    }
+
+    // 4. Editar Canción (Súper simple con Prompts)
+    async function editarCancion(id, nombreActual) {
+        const nuevoNombre = prompt("Modificar nombre de la canción:", nombreActual);
+        if (nuevoNombre && nuevoNombre !== nombreActual) {
+            try {
+                // Solo actualizamos el nombre para no hacer un formulario gigante
+                const songUpdate = { nombre: nuevoNombre };
+                const res = await fetch(`${API_URL}/songs/${id}`, {
+                    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(songUpdate)
+                });
+                if (res.ok) { alert("¡Actualizada!"); cargarCanciones(); }
+                else alert("Error al actualizar.");
+            } catch (error) { alert("Error de conexión."); }
+        }
+    }
+
+    // 5. Cargar Usuarios
+    async function cargarUsuarios() {
+        const tbody = document.getElementById('tablaUsuarios');
+        tbody.innerHTML = "<tr><td colspan='4'>Cargando...</td></tr>";
+        try {
+            const res = await fetch(`${API_URL}/users`);
+            const usuarios = await res.json();
+            tbody.innerHTML = "";
+            usuarios.forEach(u => {
+                tbody.innerHTML += `<tr><td>${u.id || '-'}</td><td>${u.nombre}</td><td>${u.email}</td><td>${u.rol}</td></tr>`;
+            });
+        } catch (error) { tbody.innerHTML = "<tr><td colspan='4'>Error al cargar usuarios</td></tr>"; }
     }
 </script>
 </body>

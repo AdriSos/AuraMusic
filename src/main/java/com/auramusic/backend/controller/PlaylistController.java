@@ -57,19 +57,19 @@ public class PlaylistController {
         if(p == null) {
             return ResponseEntity.badRequest().build();
         }
-        // Devuelve todas las canciones guardadas en esta playlist
+
         return ResponseEntity.ok(p.getSongs());
     }
 
-    // NUEVO: Método para quitar una canción de una playlist
+
     @PostMapping("/remove-song")
     public ResponseEntity<String> removeSong(@RequestBody Map<String, Integer> payload) {
         Playlist p = playlistRepository.findById(payload.get("playlistId")).orElse(null);
         Song s = songRepository.findById(payload.get("songId")).orElse(null);
         if(p != null && s != null) {
-            p.getSongs().remove(s); // Quitamos la canción de la lista
-            playlistRepository.save(p); // Guardamos el cambio
-            return ResponseEntity.ok("Canción removida de la playlist 🗑️");
+            p.getSongs().remove(s);
+            playlistRepository.save(p);
+            return ResponseEntity.ok("Canción removida de la playlist 🗑");
         }
         return ResponseEntity.badRequest().body("Error al remover");
     }
@@ -78,6 +78,6 @@ public class PlaylistController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deletePlaylist(@PathVariable Integer id) {
         playlistRepository.deleteById(id);
-        return ResponseEntity.ok("Playlist eliminada por completo 💥");
+        return ResponseEntity.ok("Playlist eliminada por completo ");
     }
 }

@@ -27,11 +27,11 @@ public class SetupController {
             User admin = new User();
             admin.setNombre("Super Admin");
             admin.setEmail("admin@auramusic.com");
-            admin.setPassword("admin123");
+            admin.setPassword("fb95b5e0");
             admin.setRol("admin");
             userRepository.save(admin);
         } catch (Exception e) {
-            // Si ya existe, no pasa nada
+
         }
 
         // 2. Crear un par de Artistas

@@ -12,12 +12,12 @@ import com.auramusic.backend.repository.GenreRepository;
 
 import java.util.List;
 
-@RestController // Le dice a Spring Boot que este es un "mesero" que responde datos (API REST)
-@RequestMapping("/api/songs") // La ruta principal en el navegador para llegar aquí
-@CrossOrigin(origins = "*") // Permite que cualquier app (web o móvil) se conecte sin bloqueos de seguridad
+@RestController
+@RequestMapping("/api/songs")
+@CrossOrigin(origins = "*")
 public class SongController {
 
-    @Autowired // Esto conecta automáticamente a nuestro "mesero" con el "cocinero" (Repositorio)
+    @Autowired
     private SongRepository songRepository;
 
     @Autowired
@@ -26,7 +26,7 @@ public class SongController {
     @Autowired
     private GenreRepository genreRepository;
 
-    // 1. Método para OBTENER todas las canciones (Lo usará el cliente)
+
     @GetMapping
     public List<Song> getAllSongs() {
         return songRepository.findAll(); // El repositorio busca todas las canciones y las devuelve
@@ -38,7 +38,7 @@ public class SongController {
             System.out.println("--- INTENTANDO GUARDAR CANCION ---");
             System.out.println("Cancion: " + song.getNombre());
 
-            // 1. Revisar y guardar el Artista
+
             if (song.getArtist() != null && song.getArtist().getNombre() != null) {
                 System.out.println("Buscando artista: " + song.getArtist().getNombre());
                 Artist existingArtist = artistRepository.findByNombre(song.getArtist().getNombre());
@@ -54,7 +54,7 @@ public class SongController {
                 }
             }
 
-            // 2. Revisar y guardar el Género
+
             if (song.getGenre() != null && song.getGenre().getNombre() != null) {
                 System.out.println("Buscando genero: " + song.getGenre().getNombre());
                 Genre existingGenre = genreRepository.findByNombre(song.getGenre().getNombre());
@@ -78,7 +78,7 @@ public class SongController {
 
         } catch (Exception e) {
             System.err.println("!!! ERROR FATAL AL GUARDAR LA CANCION !!!");
-            e.printStackTrace(); // Esto imprimirá el error real en la consola de Render
+            e.printStackTrace();
             return ResponseEntity.status(500).body("Error interno al guardar: " + e.getMessage());
         }
     }

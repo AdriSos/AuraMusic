@@ -21,7 +21,7 @@ public class Song {
     private String nombre;
 
     @Column(nullable = false)
-    private Integer duracion; // En segundos
+    private Integer duracion;
 
     private String album;
 
@@ -37,12 +37,12 @@ public class Song {
     @Column(name = "fecha_lanzamiento")
     private LocalDate fechaLanzamiento;
 
-    // Relación: Muchas canciones pertenecen a un Género
+
     @ManyToOne
-    @JoinColumn(name = "genre_id") // El nombre de la columna en la tabla de base de datos
+    @JoinColumn(name = "genre_id")
     private Genre genre;
 
-    // Relación: Muchas canciones pertenecen a un Artista
+
     @ManyToOne
     @JoinColumn(name = "artist_id")
     private Artist artist;

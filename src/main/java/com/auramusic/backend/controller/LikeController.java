@@ -19,7 +19,7 @@ public class LikeController {
     @Autowired private SongRepository songRepository;
 
     @PostMapping("/toggle")
-    @Transactional // Necesario para poder borrar de la base de datos
+    @Transactional
     public ResponseEntity<String> toggleLike(@RequestBody Map<String, Object> payload) {
         String email = (String) payload.get("email");
         Integer songId = (Integer) payload.get("songId");
@@ -31,7 +31,7 @@ public class LikeController {
             return ResponseEntity.badRequest().body("Error al buscar usuario o canción");
         }
 
-        // Si ya le había dado "Me gusta", lo quitamos. Si no, lo agregamos.
+
         if (likeRepository.existsByUserIdAndSongId(user.getId(), song.getId())) {
             likeRepository.deleteByUserIdAndSongId(user.getId(), song.getId());
             return ResponseEntity.ok("Removido de favoritos ");

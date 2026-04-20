@@ -7,7 +7,6 @@ import java.util.List;
 
 @Repository
 public interface LikeRepository extends JpaRepository<Like, Integer> {
-    // Estas dos líneas le enseñan a Spring a buscar y borrar un "Me gusta" específico
     boolean existsByUserIdAndSongId(Integer userId, Integer songId);
     void deleteByUserIdAndSongId(Integer userId, Integer songId);
     List<Like> findByUserId(Integer userId);

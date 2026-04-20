@@ -10,8 +10,8 @@
         h1, h2 { color: #05B30C; text-align: center; }
         .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
         label { margin-bottom: 5px; color: #a0a0a0; font-size: 14px; }
-        input, select { padding: 10px; border: 1px solid #333; border-radius: 5px; background-color: #000000; color: white; outline: none; }
-        input:focus, select:focus { border-color: #05B30C; }
+        input { padding: 10px; border: 1px solid #333; border-radius: 5px; background-color: #000000; color: white; outline: none; }
+        input:focus { border-color: #05B30C; }
         button { width: 100%; padding: 12px; border: none; border-radius: 25px; background-color: #05B30C; color: white; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; }
         button:hover { background-color: #048c09; }
         .logout { text-align: center; display: block; margin-top: 20px; color: #a0a0a0; text-decoration: none; }
@@ -49,13 +49,14 @@
             <label for="fechaLanzamiento">Fecha de Lanzamiento:</label>
             <input type="date" id="fechaLanzamiento">
         </div>
+
         <div class="form-group">
-            <label for="artistSelect">Artista:</label>
-            <select id="artistSelect" required><option value="">Cargando artistas...</option></select>
+            <label for="artistInput">Artista:</label>
+            <input type="text" id="artistInput" placeholder="Escribe el nombre del artista" required>
         </div>
         <div class="form-group">
-            <label for="genreSelect">Género:</label>
-            <select id="genreSelect" required><option value="">Cargando géneros...</option></select>
+            <label for="genreInput">Género:</label>
+            <input type="text" id="genreInput" placeholder="Ej: Pop, Rock, Reggaeton" required>
         </div>
 
         <button type="button" onclick="guardarCancion()">Guardar Canción</button>
@@ -64,24 +65,6 @@
 </div>
 
 <script>
-    window.onload = async function() {
-        try {
-            const resArtists = await fetch('https://auramusic-6ae1.onrender.com/api/artists');
-            const artists = await resArtists.json();
-            const artistSelect = document.getElementById('artistSelect');
-            artistSelect.innerHTML = '<option value="">Selecciona un artista</option>';
-            artists.forEach(a => { artistSelect.innerHTML += `<option value="${a.id}">${a.nombre}</option>`; });
-
-            const resGenres = await fetch('https://auramusic-6ae1.onrender.com/api/genres');
-            const genres = await resGenres.json();
-            const genreSelect = document.getElementById('genreSelect');
-            genreSelect.innerHTML = '<option value="">Selecciona un género</option>';
-            genres.forEach(g => { genreSelect.innerHTML += `<option value="${g.id}">${g.nombre}</option>`; });
-        } catch (error) {
-            alert("Error al cargar los datos. Asegúrate de que el servidor esté encendido.");
-        }
-    };
-
     async function guardarCancion() {
         const songData = {
             nombre: document.getElementById('nombre').value,
@@ -90,11 +73,12 @@
             imagenUrl: document.getElementById('imagenUrl').value,
             audioUrl: document.getElementById('audioUrl').value,
             fechaLanzamiento: document.getElementById('fechaLanzamiento').value,
-            artist: { id: document.getElementById('artistSelect').value },
-            genre: { id: document.getElementById('genreSelect').value }
+            // Ahora mandamos el texto que escribiste al backend
+            artist: { nombre: document.getElementById('artistInput').value },
+            genre: { nombre: document.getElementById('genreInput').value }
         };
 
-        if(!songData.nombre || !songData.duracion || !songData.artist.id || !songData.genre.id) {
+        if(!songData.nombre || !songData.duracion || !songData.artist.nombre || !songData.genre.nombre) {
             return alert("Por favor, llena los campos obligatorios.");
         }
 
@@ -109,7 +93,7 @@
                 alert("¡Canción guardada con éxito en AuraMusic!");
                 document.getElementById('songForm').reset();
             } else {
-                alert("Hubo un error al guardar la canción.");
+                alert("Hubo un error al guardar. (Revisa si el backend soporta guardar por nombre).");
             }
         } catch (error) {
             alert("Error de conexión con el servidor.");

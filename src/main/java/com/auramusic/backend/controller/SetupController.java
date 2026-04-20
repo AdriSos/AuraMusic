@@ -26,7 +26,7 @@ public class SetupController {
         try {
             User admin = new User();
             admin.setNombre("Super Admin");
-            admin.setEmail("admin@auramusic.com");
+            admin.setEmail("auramusic.appags@gmail.com");
             admin.setPassword("fb95b5e0");
             admin.setRol("admin");
             userRepository.save(admin);
